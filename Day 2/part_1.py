@@ -4,7 +4,7 @@ solution = 0
 
 def check_if_safe(arr):
     dir = np.sign(arr[0])
-    for x in diff:
+    for x in arr:
         if 0==dir or np.sign(x) != dir:
             return False
         elif 3 < abs(x) or 0 == x:
@@ -15,10 +15,10 @@ def check_if_safe(arr):
 with open("input.txt") as file:
     for line in file:
         str_arr = line.split()
-        arr = np.array([int(x) for x in str_arr])
+        levels = np.array([int(x) for x in str_arr])
 
 
-        diff = np.diff(arr)
+        diff = np.diff(levels)
         
         if check_if_safe(diff):
             solution+=1
