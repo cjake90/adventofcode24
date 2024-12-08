@@ -3,11 +3,10 @@ import re
 
 rules_in = []
 change_list = []
-solution = 0
+solution1 = 0
+solution2 = 0
 
 def check_validity(change, rules):
-    valid = True
-    rule_breaks = []
     #cycle through changes via index, j
     for j in range(len(change)):
             # find list of rules by index (r) that must come after current value (change[j])
@@ -16,8 +15,8 @@ def check_validity(change, rules):
         for i in r:
             # check if value from the rules comes before the current value
             if rules[i,1] in change[:j]:
-                valid = False
-    return valid
+                return [j,change.index(rules[i,1])]
+    return [0,0]
 
 
 with open("input.txt") as file:
@@ -32,8 +31,21 @@ with open("input.txt") as file:
     #change_list = np.array(change_in)
     
     for change in change_list:
-        if True == check_validity(change, rules):
-            #if no rules were broken, add middle value
-            solution+= int(change[(len(change)-1)//2])
+        rule_break = check_validity(change, rules)
+        if [0,0] == rule_break:
+            solution1 += int(change[(len(change)-1)//2])
+        else:
+            print(f'bad change is {change}')
+            while [0,0] != rule_break:
+                new_change = change
+                # move the value with a number that can't come before it to the beginning of the list
+                new_change.insert(rule_break[1], new_change.pop(rule_break[0]))
+                print(f'new change is {new_change}')
+                rule_break = check_validity(new_change, rules)
+            solution2 += int(change[(len(change)-1)//2])
 
-    print(solution)
+
+
+    print(f'Solution to part 1 is {solution1}')
+    print(f'Solution to part 2 is {solution2}')
+
