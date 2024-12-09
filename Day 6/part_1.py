@@ -2,11 +2,6 @@ from enum import Enum
 import numpy as np
 import re
 
-# direction enumerations are:
-# dir 0 = up
-# dir 1 = right
-# dir 2 = down
-# dir 3 = left
 class Direction(Enum):
     UP = 0
     RIGHT = 1
@@ -14,6 +9,16 @@ class Direction(Enum):
     LEFT = 3
 
 class Guard_Map:
+    turn_right_map = {Direction.UP:Direction.RIGHT, 
+    Direction.RIGHT:Direction.DOWN, 
+    Direction.DOWN: Direction.LEFT, 
+    Direction.LEFT:Direction.UP}
+    
+    dir_vector = {Direction.UP:[-1,0],
+    Direction.RIGHT:[0,1],
+    Direction.DOWN:[1,0],
+    Direction.LEFT:[0,-1]}
+
     def __init__(self, map):
         self.map = map
         self.dir = Direction.UP
@@ -21,72 +26,59 @@ class Guard_Map:
         self.pos = [int(init_pos[0][0]),int(init_pos[1][0])]
         self.out = False
 
-def find_next_coord(dir, pos):
-    if dir == Direction.UP:
-        new_pos = [pos[0]-1, pos[1]]
-    elif dir == Direction.RIGHT:
-        new_pos = [pos[0], pos[1]+1]
-    elif dir == Direction.DOWN:
-        new_pos = [pos[0]+1, pos[1]]
-    elif dir == Direction.LEFT:
-        new_pos = [pos[0], pos[1]-1]
-    return new_pos
+    def turn_guard_right(self):
+        self.dir = self.turn_right_map[self.dir]
 
-def turn_guard_right():
-    if guard_map.dir == Direction.UP:
-        guard_map.dir = Direction.RIGHT
-    elif guard_map.dir == Direction.RIGHT:
-        guard_map.dir = Direction.DOWN
-    elif guard_map.dir == Direction.DOWN:
-        guard_map.dir = Direction.LEFT
-    elif guard_map.dir == Direction.LEFT:
-        guard_map.dir = Direction.UP
+    def find_next_coord(self):
+        self.new_pos = [self.pos[x] + self.dir_vector[self.dir][x]
+                        for x in range(2)]
+        return self.new_pos
 
-def check_if_out(new_pos):
-    if 0 > new_pos[0] or 0 > new_pos[1] or guard_map.map.shape[0]-1 < new_pos[0] or guard_map.map.shape[1]-1 < new_pos[1]:
-        guard_map.out = True
-        return True
-    else:
-        return False
+    def check_if_out(self):
+        if (0 > self.new_pos[0] or 
+        0 > self.new_pos[1] or 
+        self.map.shape[0]-1 < self.new_pos[0] or 
+        self.map.shape[1]-1 < self.new_pos[1]):
+            self.out = True
+        return self.out
 
-
-def move_guard():
-    new_pos = find_next_coord(guard_map.dir, [guard_map.pos[0],guard_map.pos[1]])
-    
-    #first check if the guard left the map
-    if check_if_out(new_pos):
-        return True
-    else:
-        #check if the next position hits an obstacle
-        if guard_map.map[new_pos[0],new_pos[1]] == "#":
-            # if so, turn right
-            turn_guard_right()
-            new_pos = find_next_coord(guard_map.dir, [guard_map.pos[0],guard_map.pos[1]])
+    def move_guard(self):
+        self.find_next_coord()
         
-            #check again if the guard left the map 
-            if check_if_out(new_pos):
-                return True
-        guard_map.pos = new_pos
-        guard_map.map[guard_map.pos[0],guard_map.pos[1]] = "^"
-        return False
+        #first check if the guard left the map
+        if self.check_if_out():
+            return True
+        else:
+            #check if the next position hits an obstacle
+            if self.map[self.new_pos[0],self.new_pos[1]] == "#":
+                # if so, turn right
+                self.turn_guard_right()
+                self.find_next_coord()
+            
+                #check again if the guard left the map 
+                if self.check_if_out():
+                    return True
+            self.pos = self.new_pos
+            return False
 
 
+class Day6:
+    def __init__(self):
+        self.map_in = []
+        with open("example.txt") as file:
+            for line in file:
+                self.map_in.append(list(line.replace("\n","")))
+        self.guard_map = Guard_Map(np.array(self.map_in))
     
+    def guard_patrol(self):
+        while not self.guard_map.out:
+            self.guard_map.map[self.guard_map.pos[0],self.guard_map.pos[1]] = 'X'
+            self.guard_map.move_guard()
+        print(self.guard_map.map)
+        self.part1 = np.count_nonzero(self.guard_map.map == "X")
 
-with open("input.txt") as file:
-    global guard_map
-    move_count = 0
-
-    #read the map into an array
-    map_in = []
-    for line in file:
-        map_in.append(list(line.replace("\n","")))
+if __name__ == '__main__':
+    day6 = Day6()
+    day6.guard_patrol()
+    print(f'final unique move count = {day6.part1}')
     
-    #Initialize the Guard_Map
-    guard_map = Guard_Map(np.array(map_in))
-
-    while not guard_map.out:
-        guard_map.map[guard_map.pos[0],guard_map.pos[1]] = 'X'
-        move_guard()
-    print(guard_map.map)
-    print(f'final unique move count = {np.count_nonzero(guard_map.map == "X")}')
