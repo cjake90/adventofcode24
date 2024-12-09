@@ -65,7 +65,7 @@ class Guard_Map:
 class Day6:
     def __init__(self):
         self.map_in = []
-        with open("example.txt") as file:
+        with open("input.txt") as file:
             for line in file:
                 self.map_in.append(list(line.replace("\n","")))
         self.guard_map = Guard_Map(np.array(self.map_in))
